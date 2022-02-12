@@ -44,6 +44,8 @@ defmodule MicrosoftGraph do
   alias Plug.Conn.Status
   alias X509.Certificate
 
+  @base_url "https://graph.microsoft.com/v1.0"
+
   def request(request) do
     with {:ok, request} <- add_authorization(request),
          {:ok, response} <- request |> super() |> process_response_result() do
@@ -61,10 +63,12 @@ defmodule MicrosoftGraph do
     end
   end
 
+  @impl true
   def process_url(url) do
-    "https://graph.microsoft.com/v1.0" <> url
+    @base_url <> url
   end
 
+  @impl true
   def process_request_headers(headers) do
     [
       {"Content-Type", "application/json"},
@@ -73,8 +77,25 @@ defmodule MicrosoftGraph do
     ]
   end
 
+  @impl true
   def process_request_body(body) do
     Jason.encode!(body)
+  end
+
+  @doc """
+  Get all results for a paged resource.
+  """
+  def get_all(url, headers \\ [], options \\ []), do: do_get_all(url, headers, options, [])
+
+  defp do_get_all(url, headers, options, values) do
+    with {:ok, %{"value" => value} = response} <- get(url, headers, options) do
+      values = values ++ value
+
+      case response do
+        %{"@odata.nextLink" => @base_url <> next} -> do_get_all(next, headers, options, values)
+        _ -> {:ok, values}
+      end
+    end
   end
 
   # Add the `Authorization` header to a request.
