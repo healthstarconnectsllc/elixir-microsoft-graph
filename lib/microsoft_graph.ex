@@ -208,22 +208,32 @@ defmodule MicrosoftGraph do
     end
   end
 
-  defp process_response_result(response_result) do
-    case response_result do
-      {:ok, %Response{status_code: code, body: ""}} when code in 200..299 ->
-        {:ok, Status.reason_atom(code)}
+  defp process_response_result({:ok, %Response{status_code: code, body: ""}})
+       when code in 200..299,
+       do: {:ok, Status.reason_atom(code)}
 
-      {:ok, %Response{status_code: code, body: body}} when code in 200..299 ->
-        {:ok, Jason.decode!(body)}
+  defp process_response_result({:ok, %Response{status_code: code, body: body}})
+       when code in 200..299,
+       do: parse_response_body_to_json(body)
 
-      {:ok, %Response{status_code: code, body: ""}} ->
-        {:error, Status.reason_atom(code)}
+  defp process_response_result({:ok, %Response{status_code: code, body: ""}}),
+    do: {:error, Status.reason_atom(code)}
 
-      {:ok, %Response{status_code: code, body: body}} ->
-        {:error, {Status.reason_atom(code), Jason.decode!(body)}}
+  defp process_response_result({:ok, %Response{status_code: code, body: body}}),
+    do: {:error, parse_response_body_to_json(body, code)}
 
-      {:error, %Error{reason: reason}} ->
-        {:error, reason}
+  defp process_response_result({:error, %Error{reason: reason}}),
+    do: {:error, reason}
+
+  defp parse_response_body_to_json(body) do
+    Jason.decode(body)
+  end
+
+  defp parse_response_body_to_json(body, code) do
+    with {:ok, json} <- Jason.decode(body) do
+      {Status.reason_atom(code), json}
+    else
+      _ -> {Status.reason_atom(code), body}
     end
   end
 end
