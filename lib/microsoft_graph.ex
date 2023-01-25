@@ -214,7 +214,7 @@ defmodule MicrosoftGraph do
 
   defp process_response_result({:ok, %Response{status_code: code, body: body}})
        when code in 200..299,
-       do: parse_response_to_json(body, code)
+       do: parse_response_body_to_json(body)
 
   defp process_response_result({:ok, %Response{status_code: code, body: ""}}),
     do: {:error, Status.reason_atom(code)}
@@ -233,7 +233,7 @@ defmodule MicrosoftGraph do
     with {:ok, json} <- Jason.decode(body) do
       {Status.reason_atom(code), json}
     else
-      err -> {Status.reason_atom(code), body}
+      _ -> {Status.reason_atom(code), body}
     end
   end
 end
