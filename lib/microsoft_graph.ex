@@ -46,6 +46,7 @@ defmodule MicrosoftGraph do
 
   @base_url "https://graph.microsoft.com/v1.0"
 
+  @impl true
   def request(request) do
     with {:ok, request} <- add_authorization(request),
          {:ok, response} <- request |> super() |> process_response_result() do
