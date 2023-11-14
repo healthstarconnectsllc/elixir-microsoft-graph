@@ -92,8 +92,14 @@ defmodule MicrosoftGraph do
       values = values ++ value
 
       case response do
-        %{"@odata.nextLink" => @base_url <> next} -> do_get_all(next, headers, options, values)
-        _ -> {:ok, values}
+        %{"@odata.nextLink" => @base_url <> next} ->
+          # Next link includes params, so clear them out if provided in options.
+          options = Keyword.delete(options, :params)
+
+          do_get_all(next, headers, options, values)
+
+        _ ->
+          {:ok, values}
       end
     end
   end
