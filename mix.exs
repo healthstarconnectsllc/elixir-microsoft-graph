@@ -21,7 +21,7 @@ defmodule MicrosoftGraph.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:httpoison, "~> 1.6"},
+      {:httpoison, "~> 2.2"},
       {:jason, "~> 1.2"},
       {:joken, "~> 2.3"},
       {:plug, "~> 1.11"},
